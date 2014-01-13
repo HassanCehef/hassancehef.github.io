@@ -4,7 +4,7 @@
   <title><![CDATA[My Unnamed Blog]]></title>
   <link href="http://hassancehef.github.io/atom.xml" rel="self"/>
   <link href="http://hassancehef.github.io/"/>
-  <updated>2014-01-13T23:21:57+01:00</updated>
+  <updated>2014-01-13T23:54:45+01:00</updated>
   <id>http://hassancehef.github.io/</id>
   <author>
     <name><![CDATA[Hassan Cehef]]></name>
@@ -12,5 +12,262 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Display images from a SQL Server and MySQL database using PHP and PDO]]></title>
+    <link href="http://hassancehef.github.io/blog/2014/01/13/display-images-from-a-sql-server-and-mysql-database-using-php-and-pdo/"/>
+    <updated>2014-01-13T19:24:38+01:00</updated>
+    <id>http://hassancehef.github.io/blog/2014/01/13/display-images-from-a-sql-server-and-mysql-database-using-php-and-pdo</id>
+    <content type="html"><![CDATA[<p>I&rsquo;ll show here how I displayed images stored in a database, in a blob column. There are a few variation between the code of each database. I divided the article in three steps.
+We&rsquo;ll use PDO with PHP 5.3 and later. It can work with prior versions but I did not try.
+I describe a method to show images and play sounds. Most of the time, you will want to make a page <code>showImage.php?id=25</code> or a <code>playSound.php?id=414</code> and call those pages in HTML tag img and audio.</p>
+
+<h2>Step 1 : Connection</h2>
+
+<p>The options I use:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="nv">$options</span> <span class="o">=</span> <span class="k">array</span><span class="p">(</span><span class="nx">PDO</span><span class="o">::</span><span class="na">ATTR_ERRMODE</span> <span class="o">=&gt;</span> <span class="nx">PDO</span><span class="o">::</span><span class="na">ERRMODE_EXCEPTION</span><span class="p">,</span>
+</span><span class='line'>          <span class="nx">PDO</span><span class="o">::</span><span class="na">MYSQL_ATTR_INIT_COMMAND</span> <span class="o">=&gt;</span> <span class="s1">&#39;SET NAMES utf8&#39;</span><span class="p">,</span>
+</span><span class='line'>          <span class="nx">PDO</span><span class="o">::</span><span class="na">ATTR_DEFAULT_FETCH_MODE</span> <span class="o">=&gt;</span> <span class="nx">PDO</span><span class="o">::</span><span class="na">FETCH_ASSOC</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Let&rsquo;s describe those:</p>
+
+<ul>
+<li>Setting ATTR_MODE to Exception allows you to handle errors easily. When I write a new request, I use <a href="http://www.php.net/manual/en/pdostatement.setattribute.php">setAttribute</a> to set the error mode to warning.</li>
+<li>The FETCH_ASSOC is explained in the <a href="http://php.net/manual/en/pdostatement.fetch.php">documentation</a>: it returns an array indexed by column name as returned in your result set. With SQL Server, I can&rsquo;t get back columns with accents in the name: I have to use aliases ortherwise the array returned by PDO will have some strange named columns, with black question marks.</li>
+<li><code>Set Names UTF-8</code>: SET NAMES indicates what character set the client will use to send SQL statements to the server (<a href="http://dev.mysql.com/doc/refman/5.0/en/charset-connection.html">source</a>). Of course, it only works with MySQL.</li>
+</ul>
+
+
+<h3>Mysql:</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="nv">$pdo</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">\PDO</span><span class="p">(</span><span class="s2">&quot;mysql:host=&quot;</span> <span class="o">.</span> <span class="nx">BDD_DSN</span> <span class="o">.</span> <span class="s2">&quot;;dbname=&quot;</span> <span class="o">.</span> <span class="nx">BDD_NAME</span><span class="p">,</span> <span class="nx">BDD_USER</span><span class="p">,</span> <span class="nx">BDD_PASS</span><span class="p">,</span> <span class="nv">$options</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>SQL Server:</h3>
+
+<p>This might not work, because you need a specific driver to apply the solution I&rsquo;m using. You have several ways to know if you are eligible. The driver is not enabled in WAMP but it looks like it is included, you should only have to enable it and restart your server.</p>
+
+<ul>
+<li><p>create a file that contains <code>&lt;?php phpinfo();</code>
+and search for one of these lines.
+<img src="http://hassancehef.github.io/images/phpinfoSQLSrv.png" alt="phpinfo SQLSRV configuration" /></p></li>
+<li><p>create a file with the following content:</p></li>
+</ul>
+
+
+<p> <code>&lt;?php var_dump(PDO::getAvailableDrivers());</code></p>
+
+<p>I hope you use XDebug to have nice <code>var_dump</code>. If you have &lsquo;sqlsrv&rsquo; in the array, then we can continue.</p>
+
+<p>For example:</p>
+
+<p><code>array(4) { [0]=&gt; string(5) "mysql" [1]=&gt; string(4) "odbc" [2]=&gt; string(6) "sqlite" [3]=&gt; string(6) "sqlsrv" }</code></p>
+
+<p>Finally, the connection with SQL Server</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="k">new</span> <span class="nx">PDO</span><span class="p">(</span><span class="s1">&#39;sqlsrv:Server=&#39;</span><span class="o">.</span><span class="nx">BDD_DSN</span><span class="o">.</span><span class="s1">&#39;;Database=&#39;</span><span class="o">.</span><span class="nx">BDD_NAME</span><span class="p">,</span> <span class="nx">BDD_USER</span><span class="p">,</span> <span class="nx">BDD_PASS</span><span class="p">,</span> <span class="nv">$options</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>Step 2: Writing the request</h2>
+
+<p>I could keep the same request for both MySQL and SQL Server. I did it this way:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="nv">$requestImg</span> <span class="o">=</span> <span class="nv">$pdo</span><span class="o">-&gt;</span><span class="na">prepare</span><span class="p">(</span><span class="s1">&#39;SELECT Picture FROM Table WHERE PrimaryKey = :id&#39;</span><span class="p">);</span>
+</span><span class='line'>      <span class="nv">$requestImg</span><span class="o">-&gt;</span><span class="na">bindParam</span><span class="p">(</span><span class="s1">&#39;:id&#39;</span><span class="p">,</span> <span class="nv">$idImage</span><span class="p">,</span> <span class="nx">PDO</span><span class="o">::</span><span class="na">PARAM_INT</span><span class="p">);</span>
+</span><span class='line'>      <span class="k">try</span> <span class="p">{</span>
+</span><span class='line'>          <span class="nv">$requestImg</span><span class="o">-&gt;</span><span class="na">execute</span><span class="p">();</span>
+</span><span class='line'>          <span class="nv">$requestImg</span><span class="o">-&gt;</span><span class="na">bindColumn</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nv">$myImage</span><span class="p">,</span> <span class="nx">PDO</span><span class="o">::</span><span class="na">PARAM_LOB</span><span class="p">);</span>
+</span><span class='line'>          <span class="nv">$reponse</span> <span class="o">=</span> <span class="nv">$requestImg</span><span class="o">-&gt;</span><span class="na">fetch</span><span class="p">(</span><span class="nx">PDO</span><span class="o">::</span><span class="na">FETCH_BOUND</span><span class="p">);</span>
+</span><span class='line'>          <span class="k">if</span> <span class="p">(</span><span class="nv">$reponse</span> <span class="o">!==</span> <span class="k">false</span> <span class="o">&amp;&amp;</span> <span class="nv">$myImage</span> <span class="o">!=</span> <span class="k">null</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>              <span class="nv">$imageExistsInDB</span> <span class="o">=</span> <span class="k">true</span><span class="p">;</span>
+</span><span class='line'>          <span class="p">}</span>
+</span><span class='line'>      <span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="nx">PDOException</span> <span class="nv">$e</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>
+</span><span class='line'>      <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>If you want to get the size of the data (image, sound) you are collecting, there is the LENGTH function in Mysql and DATALENGTH for SQL Server ( <code>SELECT Picture, LENGTH(Picture) FROM ...</code>)</p>
+
+<p>The size can be useful for large files you want your users to download. It&rsquo;s nice to specify the size of the file in the <a href="http://php.net/manual/en/function.header.php#refsect1-function.header-examples">headers</a> so that a progress bar can be displayed in the browser.
+Be careful: blob usually are heavy. Write your request with a Where clause on the primary key of the table, so that you&rsquo;re getting only one result.</p>
+
+<h2>Step 3: send the data</h2>
+
+<ol>
+<li><p> Send the headers with the php function <a href="http://php.net/manual/en/function.header.php">headers</a>. Some fun here: what kind of images do you have in your database? My images started with <code>0xFF</code>, it rang a bell, I knew it was jpeg images. Try a google search.</p></li>
+<li><ul>
+<li>Mysql : <code>echo $myImage;</code></li>
+<li>SQL Server
+
+<ul>
+<li>Prior to PHP 5.4
+<code>echo pack("H*" , $image);</code></li>
+<li>PHP 5.4 and higher
+<code>echo hex2bin($image);</code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+
+
+<h2>Bonus</h2>
+
+<h4>The full code, in a gist</h4>
+
+<p>Later in the week</p>
+
+<h4>the header to play mp3</h4>
+
+<p><code>header('Content-Type: audio/mpeg');</code></p>
+
+<h4>print a default image in the case the image isn&rsquo;t found in the database.</h4>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='php'><span class='line'><span class="k">if</span> <span class="p">(</span><span class="nv">$imageExistsInDB</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="c1">//headers here</span>
+</span><span class='line'>    <span class="k">echo</span> <span class="nv">$myImage</span><span class="p">;</span> <span class="c1">// or the pack or the hex2bin</span>
+</span><span class='line'><span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>  <span class="c1">//headers here</span>
+</span><span class='line'>    <span class="k">echo</span> <span class="nb">file_get_contents</span><span class="p">(</span><span class="s1">&#39;path/to/image/default.png&#39;</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Take care of headers (jpeg in your database, png for your default image&hellip;).</p>
+
+<p>Useful documentation:</p>
+
+<ul>
+<li><a href="http://www.php.net/manual/en/function.hex2bin.php">http://www.php.net/manual/en/function.hex2bin.php</a></li>
+<li><a href="http://www.php.net/manual/en/pdo.lobs.php">http://www.php.net/manual/en/pdo.lobs.php</a></li>
+<li><a href="http://us1.php.net/manual/en/function.pack.php">http://us1.php.net/manual/en/function.pack.php</a></li>
+</ul>
+
+
+<p>Note: It took me quite a while to figure out how to solve this problem, along with the issues on accents. Be nice enough to add in your code a link to this article :)</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Convert a SQL Server Database to a MySQL one]]></title>
+    <link href="http://hassancehef.github.io/blog/2014/01/13/convert-a-sql-server-database-to-a-mysql-one/"/>
+    <updated>2014-01-13T18:47:10+01:00</updated>
+    <id>http://hassancehef.github.io/blog/2014/01/13/convert-a-sql-server-database-to-a-mysql-one</id>
+    <content type="html"><![CDATA[<h2>Introduction</h2>
+
+<p>Hi. I recently had to develop a small website as part of my studies. That site had to deal with a database, a Microsoft SQL Server&rsquo;s one.
+Problem: I wanted to work on this project while I was on holidays, but I knew I wouldn&rsquo;t have an Internet access during this pediod.
+So, SSH wasn&rsquo;t an option. The database contains text, but also pictures and music extracts. The project had to run on my school&rsquo;s server,
+the MySQL database was only used to work more efficiently (i.e I did not try to optimize it). The database has 20 tables and about 50 000 rows.</p>
+
+<p>I decided to copy the database on MySQL to work on my computer with all the advantages of it (faster, all warnings activated in PHP)</p>
+
+<h2>Step 1: extract the database using SQL Server Management Studio</h2>
+
+<p>The database I was copying had 20 tables. I tried to extract all of them, but it failed. So I extracted them one by one.
+The extraction of tables with images went all right (around 60 Mo / file for about 600 images in each) but the table with music in it always failed.
+I didn&rsquo;t know if I could copy all the columns except one of them with the software, so I decided to use a more brutal approach: I wrote a PHP page that generated MySQL Insert Statements, without the music.</p>
+
+<p>There is plenty of documentation to generate those files. I&rsquo;ve just realized that I could have used CSV to export data :(.</p>
+
+<p>Now, you should have lots of files, each on them starts with the structure of the table, then contains Insert statements, and then information about foreign keys and indexes.</p>
+
+<h2>Step 2: create tables with PHPMyAdmin</h2>
+
+<p>20 tables, even with integrity constraints, is small enough to create them by hand. I didn&rsquo;t find any script to translate a syntax to another.</p>
+
+<p>1-  Create a new user in PHPMyAdmin. Name it as your database and ask PHPMyAdmin to create a database on which the user has full rights. This way,
+you won&rsquo;t write your root password in your code, and if you have a security issue, the only database which can be impacted is the one you&rsquo;re creating right now.
+I have to use Local as Host; otherwise I can&rsquo;t use the console.</p>
+
+<p><img src="http://hassancehef.github.io/images/addUserPHPMyAdmin.png" alt="phmMyAdmin add User" /></p>
+
+<p>2-  Create tables
+I wanted to work as quickly as possible, so I didn&rsquo;t optimize the database.
+A few things you have to take care of:</p>
+
+<ul>
+<li>If you create a primary key as Unsigned Int, then all the foreign keys referencing this key must both be unsigned and have the same size (unsigned int 11 for example).</li>
+<li>If you use the InnoDB Engine and are willing to add a foreign key constraint, first you have to add an index on the foreign key.</li>
+<li>I chose to use varchar to replace nchar. There may be there is a better solution.</li>
+<li>You can fill a blob with small files. Use longblob if you don&rsquo;t care about optimization. Have a look at the <a href="http://dev.mysql.com/doc/refman/5.0/en/storage-requirements.html">documentation</a>.</li>
+</ul>
+
+
+<h2>Step 3: convert SQL Server&rsquo;s syntax to MySQL</h2>
+
+<p>Again, I did it by hand. I worked on Linux, and I used Geany to apply Search &amp; Replace. I think you can do
+the same using Notepad++ (or SublimeText, I&rsquo;m just trying this tool which seems to be wonderful) on Windows; I don&rsquo;t know if it can handle large files (60Mo).</p>
+
+<p>SQL Server export scripts are encoded in UTF-16-LE (Little Endian). The first thing you can do is changing the encoding to UTF-8. This will reduce by half the size of the files
+(and, I guess, speed up the process of search and replace)</p>
+
+<p>What you have to delete in every file:</p>
+
+<ul>
+<li>The beginning and the end of it. You only have to keep Insert statements.</li>
+<li>All <code>GO</code> instructions. Use standard replace with <code>GO\r\n</code>. On Geany, I had to check the box &ldquo;use escape characters&rdquo;.</li>
+<li>all <code>[dbo].</code> that prefixes tables name. I did a &ldquo;search and replace&rdquo; on <code>[dbo].</code>. Be careful, do NOT check the regular expression box.</li>
+<li>All the brackets around columns name. Because I hadn&rsquo;t brackets in the data I was manipulating, I removed all of them.</li>
+<li>Add a semi-colon at the end of every line. I replaced <code>)\r\n</code> by <code>);\r\n</code></li>
+</ul>
+
+
+<p>Geany has a nice option which applies &ldquo;search and replace&rdquo; on all the files opened.</p>
+
+<h2>Step 4: add data in the database.</h2>
+
+<p>You can use PHPMyAdmin to do so, but it cannot handle large files (~15 Mo) therefore we will use the console.
+With images in the database I had 2 files bigger than 30 Mo. You have to change MySQL&rsquo;s configuration to allow the importation of files bigger than 16 Mo.</p>
+
+<p>Open <code>my.cnf</code> file (<a href="http://dev.mysql.com/doc/refman/5.0/en/option-files.html">http://dev.mysql.com/doc/refman/5.0/en/option-files.html</a>).
+Find this line, or add it: <code>max_allowed_packet=64M</code>
+Or course, if you have a larger file, allow a larger value. Restart your MySQL server.</p>
+
+<p>Open a MySQL console in the folder of your scripts, in order to avoid filepath issues.
+run the command: <code>mysql --show-warnings -u NEWUSER -p</code>. MySQL will ask your NEWUSER password, the one you created in step 2. Then, run <code>use MYNEWDATABASE;</code>, where MYNEWDATABASE is the one you created in step 2.</p>
+
+<p>If you have integrity constraints, you can either disable them, run all your INSERTs, and enable them, or let them enabled, in which case you have to add your tables in the right order.
+The former solution is fast, the latter is slower but it allows you to see warnings when mysql displays them.
+To disable integrity constraints, run <code>SET FOREIGN_KEY_CHECKS=0;</code> in the console. Set it to 1 to enable them after the job is done.</p>
+
+<p>Now, run the command <code>source MYTABLE.sql;</code> for each table you have.
+If MySQL displays warnings, try to read them (try, because it is hard to stop the execution of the script as the rows are multiplicating on the screen).</p>
+
+<p>Job&rsquo;s done :)</p>
+
+<p>You can use PHPMyAdmin to export the database and give it to all your friends \o/. They will just have to go through step 2-1 and step 4.</p>
+]]></content>
+  </entry>
   
 </feed>

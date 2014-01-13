@@ -5,7 +5,7 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>My Unnamed Blog</title>
+  <title>Display images from a SQL Server and MySQL database using PHP and PDO - My Unnamed Blog</title>
   <meta name="author" content="Hassan Cehef">
 
   
@@ -18,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://hassancehef.github.io">
+  <link rel="canonical" href="http://hassancehef.github.io/blog/2014/01/13/display-images-from-a-sql-server-and-mysql-database-using-php-and-pdo">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <link href="/atom.xml" rel="alternate" title="My Unnamed Blog" type="application/atom+xml">
@@ -61,15 +61,12 @@
 </nav> -->
   <div id="main">
     <div id="content">
-      <div class="blog-index">
+      <div>
+<article class="hentry" role="article">
   
-  
-  
-    <article>
-      
   <header>
     
-      <h1 class="entry-title"><a href="/blog/2014/01/13/display-images-from-a-sql-server-and-mysql-database-using-php-and-pdo/">Display Images From a SQL Server and MySQL Database Using PHP and PDO</a></h1>
+      <h1 class="entry-title">Display Images From a SQL Server and MySQL Database Using PHP and PDO</h1>
     
     
       <p class="meta">
@@ -92,7 +89,7 @@
   </header>
 
 
-  <div class="entry-content"><p>I&rsquo;ll show here how I displayed images stored in a database, in a blob column. There are a few variation between the code of each database. I divided the article in three steps.
+<div class="entry-content"><p>I&rsquo;ll show here how I displayed images stored in a database, in a blob column. There are a few variation between the code of each database. I divided the article in three steps.
 We&rsquo;ll use PDO with PHP 5.3 and later. It can work with prior versions but I did not try.
 I describe a method to show images and play sounds. Most of the time, you will want to make a page <code>showImage.php?id=25</code> or a <code>playSound.php?id=414</code> and call those pages in HTML tag img and audio.</p>
 
@@ -250,22 +247,16 @@ Be careful: blob usually are heavy. Write your request with a Where clause on th
 
 <p>Note: It took me quite a while to figure out how to solve this problem, along with the issues on accents. Be nice enough to add in your code a link to this article :)</p>
 </div>
-  
-  
 
 
-    </article>
-  
-  
-    <article>
+  <footer>
+    <p class="meta">
       
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2014/01/13/convert-a-sql-server-database-to-a-mysql-one/">Convert a SQL Server Database to a MySQL One</a></h1>
-    
-    
-      <p class="meta">
-        
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Hassan Cehef</span></span>
+
+      
 
 
 
@@ -277,110 +268,30 @@ Be careful: blob usually are heavy. Write your request with a Where clause on th
   
 
 
-<time datetime="2014-01-13T18:47:10+01:00" pubdate data-updated="true">Jan 13<span>th</span>, 2014</time>
-        
-      </p>
+<time datetime="2014-01-13T19:24:38+01:00" pubdate data-updated="true">Jan 13<span>th</span>, 2014</time>
+      
+
+
+    </p>
     
-  </header>
-
-
-  <div class="entry-content"><h2>Introduction</h2>
-
-<p>Hi. I recently had to develop a small website as part of my studies. That site had to deal with a database, a Microsoft SQL Server&rsquo;s one.
-Problem: I wanted to work on this project while I was on holidays, but I knew I wouldn&rsquo;t have an Internet access during this pediod.
-So, SSH wasn&rsquo;t an option. The database contains text, but also pictures and music extracts. The project had to run on my school&rsquo;s server,
-the MySQL database was only used to work more efficiently (i.e I did not try to optimize it). The database has 20 tables and about 50 000 rows.</p>
-
-<p>I decided to copy the database on MySQL to work on my computer with all the advantages of it (faster, all warnings activated in PHP)</p>
-
-<h2>Step 1: extract the database using SQL Server Management Studio</h2>
-
-<p>The database I was copying had 20 tables. I tried to extract all of them, but it failed. So I extracted them one by one.
-The extraction of tables with images went all right (around 60 Mo / file for about 600 images in each) but the table with music in it always failed.
-I didn&rsquo;t know if I could copy all the columns except one of them with the software, so I decided to use a more brutal approach: I wrote a PHP page that generated MySQL Insert Statements, without the music.</p>
-
-<p>There is plenty of documentation to generate those files. I&rsquo;ve just realized that I could have used CSV to export data :(.</p>
-
-<p>Now, you should have lots of files, each on them starts with the structure of the table, then contains Insert statements, and then information about foreign keys and indexes.</p>
-
-<h2>Step 2: create tables with PHPMyAdmin</h2>
-
-<p>20 tables, even with integrity constraints, is small enough to create them by hand. I didn&rsquo;t find any script to translate a syntax to another.</p>
-
-<p>1-  Create a new user in PHPMyAdmin. Name it as your database and ask PHPMyAdmin to create a database on which the user has full rights. This way,
-you won&rsquo;t write your root password in your code, and if you have a security issue, the only database which can be impacted is the one you&rsquo;re creating right now.
-I have to use Local as Host; otherwise I can&rsquo;t use the console.</p>
-
-<p><img src="/images/addUserPHPMyAdmin.png" alt="phmMyAdmin add User" /></p>
-
-<p>2-  Create tables
-I wanted to work as quickly as possible, so I didn&rsquo;t optimize the database.
-A few things you have to take care of:</p>
-
-<ul>
-<li>If you create a primary key as Unsigned Int, then all the foreign keys referencing this key must both be unsigned and have the same size (unsigned int 11 for example).</li>
-<li>If you use the InnoDB Engine and are willing to add a foreign key constraint, first you have to add an index on the foreign key.</li>
-<li>I chose to use varchar to replace nchar. There may be there is a better solution.</li>
-<li>You can fill a blob with small files. Use longblob if you don&rsquo;t care about optimization. Have a look at the <a href="http://dev.mysql.com/doc/refman/5.0/en/storage-requirements.html">documentation</a>.</li>
-</ul>
-
-
-<h2>Step 3: convert SQL Server&rsquo;s syntax to MySQL</h2>
-
-<p>Again, I did it by hand. I worked on Linux, and I used Geany to apply Search &amp; Replace. I think you can do
-the same using Notepad++ (or SublimeText, I&rsquo;m just trying this tool which seems to be wonderful) on Windows; I don&rsquo;t know if it can handle large files (60Mo).</p>
-
-<p>SQL Server export scripts are encoded in UTF-16-LE (Little Endian). The first thing you can do is changing the encoding to UTF-8. This will reduce by half the size of the files
-(and, I guess, speed up the process of search and replace)</p>
-
-<p>What you have to delete in every file:</p>
-
-<ul>
-<li>The beginning and the end of it. You only have to keep Insert statements.</li>
-<li>All <code>GO</code> instructions. Use standard replace with <code>GO\r\n</code>. On Geany, I had to check the box &ldquo;use escape characters&rdquo;.</li>
-<li>all <code>[dbo].</code> that prefixes tables name. I did a &ldquo;search and replace&rdquo; on <code>[dbo].</code>. Be careful, do NOT check the regular expression box.</li>
-<li>All the brackets around columns name. Because I hadn&rsquo;t brackets in the data I was manipulating, I removed all of them.</li>
-<li>Add a semi-colon at the end of every line. I replaced <code>)\r\n</code> by <code>);\r\n</code></li>
-</ul>
-
-
-<p>Geany has a nice option which applies &ldquo;search and replace&rdquo; on all the files opened.</p>
-
-<h2>Step 4: add data in the database.</h2>
-
-<p>You can use PHPMyAdmin to do so, but it cannot handle large files (~15 Mo) therefore we will use the console.
-With images in the database I had 2 files bigger than 30 Mo. You have to change MySQL&rsquo;s configuration to allow the importation of files bigger than 16 Mo.</p>
-
-<p>Open <code>my.cnf</code> file (<a href="http://dev.mysql.com/doc/refman/5.0/en/option-files.html">http://dev.mysql.com/doc/refman/5.0/en/option-files.html</a>).
-Find this line, or add it: <code>max_allowed_packet=64M</code>
-Or course, if you have a larger file, allow a larger value. Restart your MySQL server.</p>
-
-<p>Open a MySQL console in the folder of your scripts, in order to avoid filepath issues.
-run the command: <code>mysql --show-warnings -u NEWUSER -p</code>. MySQL will ask your NEWUSER password, the one you created in step 2. Then, run <code>use MYNEWDATABASE;</code>, where MYNEWDATABASE is the one you created in step 2.</p>
-
-<p>If you have integrity constraints, you can either disable them, run all your INSERTs, and enable them, or let them enabled, in which case you have to add your tables in the right order.
-The former solution is fast, the latter is slower but it allows you to see warnings when mysql displays them.
-To disable integrity constraints, run <code>SET FOREIGN_KEY_CHECKS=0;</code> in the console. Set it to 1 to enable them after the job is done.</p>
-
-<p>Now, run the command <code>source MYTABLE.sql;</code> for each table you have.
-If MySQL displays warnings, try to read them (try, because it is hard to stop the execution of the script as the rows are multiplicating on the screen).</p>
-
-<p>Job&rsquo;s done :)</p>
-
-<p>You can use PHPMyAdmin to export the database and give it to all your friends \o/. They will just have to go through step 2-1 and step 4.</p>
+      <div class="sharing">
+  
+  
+  
 </div>
-  
-  
 
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2014/01/13/convert-a-sql-server-database-to-a-mysql-one/" title="Previous Post: Convert a SQL Server Database to a MySQL one">&laquo; Convert a SQL Server Database to a MySQL one</a>
+      
+      
+    </p>
+  </footer>
+</article>
 
-    </article>
-  
-  <div class="pagination">
-    
-    <a href="/blog/archives">Blog Archives</a>
-    
-  </div>
 </div>
+
 <aside class="sidebar">
   
     <section>
@@ -411,7 +322,7 @@ If MySQL displays warnings, try to read them (try, because it is hard to stop th
 <section>
   <h1>GitHub Repos</h1>
   <ul id="gh_repos">
-    <li class="loading">Status updating&#8230;</li>
+    <li class="loading">Status updating...</li>
   </ul>
   
   <a href="https://github.com/HassanCehef">@HassanCehef</a> on GitHub
@@ -440,6 +351,7 @@ If MySQL displays warnings, try to read them (try, because it is hard to stop th
 
   
 </aside>
+
 
     </div>
   </div>
